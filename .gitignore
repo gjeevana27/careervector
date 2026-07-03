@@ -1,0 +1,23 @@
+# API Keys — NEVER commit these
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Data files
+data/
+*.csv
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.tmp
