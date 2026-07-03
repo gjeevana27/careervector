@@ -11,12 +11,34 @@ from src.ui.components.cards.project_card import render_projects
 from src.ui.components.cards.certification_card import render_certifications
 
 
+def clear_all_cached_results():
+    """Clear all session state that depends on resume content."""
+    keys_to_clear = [
+        "job_matches",
+        "gap_results",
+        "ats",
+        "skill_gap",
+        "skill_gap_job",
+        "optimizer",
+        "interview_active",
+        "interview_messages",
+        "interview_complete",
+        "interview_feedback",
+        "interview_job",
+        "interview_system_prompt",
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+
+
 def render_resume_analysis():
 
     st.title("Resume Analysis")
 
     st.write(
-        "Upload your resume and let CareerVector uncover strengths, identify opportunities, and help you build a resume that stands out."
+        "Upload your resume and let CareerVector uncover strengths, "
+        "identify opportunities, and help you build a resume that stands out."
     )
 
     st.divider()
@@ -77,6 +99,9 @@ Upload your resume and CareerVector will analyze:
                     resume, resume_text = analyzer.analyze(
                         uploaded_file
                     )
+
+                    # Clear all cached results from previous resume
+                    clear_all_cached_results()
 
                     st.session_state["resume"] = resume
                     st.session_state["resume_text"] = resume_text
@@ -151,7 +176,8 @@ Upload your resume and CareerVector will analyze:
     if "resume" in st.session_state:
 
         st.success(
-            "Resume analyzed successfully and stored for all CareerVector modules."
+            "Resume analyzed successfully and stored "
+            "for all CareerVector modules."
         )
 
     else:

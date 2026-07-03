@@ -31,6 +31,7 @@ def render_job_matches():
         return
 
     resume_text = st.session_state["resume_text"]
+    resume = st.session_state.get("resume", None)
 
     # ------------------------------------------------
     # Search & Filters
@@ -46,8 +47,8 @@ def render_job_matches():
     with col2:
         location_filter = st.selectbox(
             "Location",
-            ["Anywhere", "Remote", "New York",
-             "California", "Texas", "Virginia", "Maryland"],
+            ["Anywhere", "Remote", "United States",
+             "New York", "California", "Texas", "Virginia"],
         )
 
     with col3:
@@ -66,7 +67,11 @@ def render_job_matches():
         with st.spinner("Finding best matches from Pinecone..."):
             try:
                 matcher = JobMatcher()
-                matches = matcher.match(resume_text, top_k=15)
+                matches = matcher.match(
+                    resume_text=resume_text,
+                    top_k=15,
+                    resume=resume
+                )
                 st.session_state["job_matches"] = matches
             except Exception as e:
                 st.error(f"Matching error: {str(e)}")
@@ -79,7 +84,6 @@ def render_job_matches():
     # ------------------------------------------------
     filtered = matches
 
-    # Search filter
     if search_query.strip():
         filtered = [
             m for m in filtered
@@ -87,7 +91,6 @@ def render_job_matches():
             or search_query.lower() in m["company"].lower()
         ]
 
-    # Location filter
     if location_filter != "Anywhere":
         if location_filter == "Remote":
             filtered = [
@@ -102,7 +105,6 @@ def render_job_matches():
                 clean(m["location"]).lower()
             ]
 
-    # Experience filter
     if experience_filter != "All":
         filtered = [
             m for m in filtered
@@ -124,7 +126,6 @@ def render_job_matches():
             st.rerun()
         return
 
-    # Init gap results store
     if "gap_results" not in st.session_state:
         st.session_state["gap_results"] = {}
 
@@ -155,14 +156,18 @@ def render_job_matches():
 
             with col1:
                 st.markdown(f"### {title}")
-
                 remote_tag = " 🌐 Remote" if is_remote else ""
-                location_display = f"{location}{remote_tag}" if location else remote_tag
-                st.write(f"**{company}**" + (f" • {location_display}" if location_display else ""))
-
+                location_display = (
+                    f"{location}{remote_tag}"
+                    if location else remote_tag
+                )
+                st.write(
+                    f"**{company}**" +
+                    (f" • {location_display}"
+                     if location_display else "")
+                )
                 if emp_type:
                     st.caption(f"📋 {emp_type}")
-
                 if skills:
                     st.caption(f"🛠 Skills: {skills[:200]}")
 
@@ -170,7 +175,6 @@ def render_job_matches():
                 st.metric("Match", f"{score}%")
                 st.write(icon)
 
-            # Buttons
             btn_col1, btn_col2 = st.columns(2)
 
             with btn_col1:
@@ -193,7 +197,9 @@ def render_job_matches():
                 show_key = f"show_{job['jd_id']}"
 
                 if gap_key not in st.session_state["gap_results"]:
-                    with st.spinner("Running gap analysis with Groq..."):
+                    with st.spinner(
+                        "Running gap analysis with Groq..."
+                    ):
                         try:
                             service = CareerService()
                             gap = service.gap_analysis(
@@ -201,7 +207,9 @@ def render_job_matches():
                                 jd_text=job["full_description"],
                                 job_title=title
                             )
-                            st.session_state["gap_results"][gap_key] = gap
+                            st.session_state[
+                                "gap_results"
+                            ][gap_key] = gap
                         except Exception as e:
                             st.error(f"Analysis error: {str(e)}")
 
@@ -209,7 +217,6 @@ def render_job_matches():
                     show_key, False
                 )
 
-            # Show details panel
             show_key = f"show_{job['jd_id']}"
             gap_key = f"gap_{job['jd_id']}"
 
@@ -231,7 +238,11 @@ def render_job_matches():
                 else:
                     st.error(f"❌ Overall Fit: {fit}")
 
-                st.write(f"**Summary:** {gap.get('match_summary', '')}")
+                st.write(
+                    f"**Summary:** "
+                    f"{gap.get('match_summary', '')}"
+                )
+
                 st.divider()
 
                 g1, g2 = st.columns(2)
@@ -255,7 +266,10 @@ def render_job_matches():
 
                 bullet = gap.get("suggested_bullet", "")
                 if bullet:
-                    st.info(f"✍️ **Suggested Resume Bullet:**\n\n> {bullet}")
+                    st.info(
+                        f"✍️ **Suggested Resume Bullet:**"
+                        f"\n\n> {bullet}"
+                    )
 
                 points = gap.get("interview_talking_points", [])
                 if points:
@@ -273,7 +287,10 @@ def render_job_matches():
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("🔄 Refresh Matches", use_container_width=True):
+        if st.button(
+            "🔄 Refresh Matches",
+            use_container_width=True
+        ):
             if "job_matches" in st.session_state:
                 del st.session_state["job_matches"]
             if "gap_results" in st.session_state:
@@ -282,5 +299,6 @@ def render_job_matches():
 
     with col2:
         st.caption(
-            f"Showing {len(filtered)} of {len(matches)} total matches"
+            f"Showing {len(filtered)} of "
+            f"{len(matches)} total matches"
         )
