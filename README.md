@@ -1,3 +1,14 @@
+---
+title: CareerVector
+emoji: 🎯
+colorFrom: red
+colorTo: black
+sdk: docker
+python_version: "3.11"
+app_file: app.py
+pinned: false
+---
+
 # CareerVector 
 ### AI-Powered Resume Intelligence Platform
 
