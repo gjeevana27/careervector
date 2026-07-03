@@ -1,15 +1,84 @@
 import numpy as np
-from pinecone import Pinecone
+from pinecone import Pinecone, ServerlessSpec
+from sentence_transformers import SentenceTransformer
 from src.core.config import settings
 from src.embeddings.embedding_service import EmbeddingService
+import time
 
 
 class JobMatcher:
 
     def __init__(self):
-        pc = Pinecone(api_key=settings.PINECONE_API_KEY)
-        self.index = pc.Index(settings.PINECONE_INDEX_NAME)
+        self.pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+        self.index = self.pc.Index(settings.PINECONE_INDEX_NAME)
         self.embedder = EmbeddingService()
+        self.model = SentenceTransformer(settings.EMBEDDING_MODEL)
+
+    def ingest_jobs(self, jobs: list):
+        """
+        Embed and upsert new jobs to Pinecone.
+        Clears existing vectors first so results are always fresh.
+        """
+        if not jobs:
+            return
+
+        # Clear existing vectors
+        try:
+            self.index.delete(delete_all=True)
+            time.sleep(2)
+        except Exception:
+            pass
+
+        # Embed and upsert in batches
+        batch_size = 50
+        for i in range(0, len(jobs), batch_size):
+            batch = jobs[i:i+batch_size]
+
+            texts = [
+                (j.get("title", "") + ". " +
+                 j.get("full_description", ""))
+                for j in batch
+            ]
+
+            embeddings = self.model.encode(
+                texts,
+                show_progress_bar=False
+            ).tolist()
+
+            vectors = []
+            for k, job in enumerate(batch):
+                if not job.get("id"):
+                    continue
+                vectors.append({
+                    "id": str(job["id"]),
+                    "values": embeddings[k],
+                    "metadata": {
+                        "title": str(job.get("title", "")),
+                        "company": str(job.get("company", "")),
+                        "location": str(job.get("location", "") or ""),
+                        "required_skills": str(
+                            job.get("required_skills", "") or ""
+                        )[:500],
+                        "full_description": str(
+                            job.get("full_description", "") or ""
+                        )[:1000],
+                        "employment_type": str(
+                            job.get("employment_type", "") or ""
+                        ),
+                        "is_remote": bool(
+                            job.get("is_remote", False)
+                        ),
+                        "apply_link": str(
+                            job.get("apply_link", "") or ""
+                        ),
+                        "posted_at": str(
+                            job.get("posted_at", "") or ""
+                        )
+                    }
+                })
+
+            if vectors:
+                self.index.upsert(vectors=vectors)
 
     def match(
         self,
@@ -23,7 +92,7 @@ class JobMatcher:
             self.embedder.embed(resume_text)
         )
 
-        # If structured resume available use weighted embedding
+        # Weighted embedding using skills + experience
         if resume:
             skills = resume.get("skills", [])
             experience = resume.get("experience", [])
@@ -49,7 +118,6 @@ class JobMatcher:
                     skills_emb * 0.4 +
                     exp_emb * 0.4
                 )
-
             elif skills_text:
                 skills_emb = np.array(
                     self.embedder.embed(skills_text)
