@@ -9,10 +9,10 @@ class Settings:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
     # Main model for heavy tasks
-    MODEL_NAME = "llama-3.3-70b-versatile"
+    MODEL_NAME = "qwen/qwen3.6-27b"
 
     # Lighter model for interview chat — saves tokens
-    INTERVIEW_MODEL = "llama-3.1-8b-instant"
+    INTERVIEW_MODEL = "openai/gpt-oss-20b"
 
     PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
     PINECONE_INDEX_NAME = "jd-matcher"
