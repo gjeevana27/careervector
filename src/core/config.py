@@ -9,7 +9,7 @@ class Settings:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
     # Main model for heavy tasks
-    MODEL_NAME = "qwen/qwen3.6-27b"
+    MODEL_NAME = "openai/gpt-oss-120b"
 
     # Lighter model for interview chat — saves tokens
     INTERVIEW_MODEL = "openai/gpt-oss-20b"
