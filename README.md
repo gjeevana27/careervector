@@ -9,7 +9,7 @@ app_file: app.py
 pinned: false
 ---
 
-# CareerVector 🎯
+# CareerVector
 ### AI-Powered Resume Intelligence Platform
 
 CareerVector is an end-to-end AI career assistant that analyzes your resume,
@@ -20,50 +20,63 @@ and simulates live job interviews — all in one platform.
 ---
 
 ## Live Demo
-🚀 [Try CareerVector Live](https://huggingface.co/spaces/gjeevana/CareerVector)
+
+[Try CareerVector Live](https://huggingface.co/spaces/gjeevana/CareerVector)
+
+---
+
+## Evaluation
+
+| Metric | Score |
+|---|---|
+| Precision@5 | 72.0% |
+| Recall@5 | 57.2% |
+| Median Query Latency | 99ms |
+| P95 Query Latency | 149ms |
+| Evaluation Dataset | 20 manually labeled resume-JD pairs |
+
+Evaluation scripts and dataset in `/evaluation`.
 
 ---
 
 ## Features
 
-### 📄 Vector Analysis
+### Vector Analysis
 Upload your resume (PDF or DOCX) and CareerVector extracts and structures
 every section — contact info, summary, skills, experience, projects, and
-certifications — using Groq's Llama 3.3 70B model. Immediately after
-analysis, real-time jobs are fetched from JSearch based on your specific
-skills and experience titles, and indexed into Pinecone automatically.
+certifications — using Groq LLM. Immediately after analysis, real-time jobs
+are fetched from JSearch based on your specific skills and experience titles,
+and indexed into Pinecone automatically.
 
-### 💼 Career Matches
+### Career Matches
 Your resume is embedded using HuggingFace sentence-transformers with
 section-weighted matching (skills 40%, experience 40%, full text 20%)
 and matched against freshly fetched job listings stored in Pinecone via
 cosine similarity. Each match shows a percentage score, required skills,
-and a one-click gap analysis powered by Groq.
+and a one-click gap analysis.
 
-### 🎯 ATS Radar
+### ATS Radar
 Scores your resume against Applicant Tracking Systems — both generally and
-against a specific job description from your matches. Shows section scores,
-matched and missing keywords, action verb strength, quantification quality,
-and formatting issues.
+against a specific job description. Shows section scores, matched and missing
+keywords, action verb strength, quantification quality, and formatting issues.
 
-### 🚀 Growth Path
+### Growth Path
 Select a job from your Career Matches and get a personalized roadmap:
-skills to learn with free and paid resource links, projects to build,
-certifications to get, career trajectory at 3 months / 6 months / 1 year,
-and quick wins you can do this week.
+skills to learn with resource links, projects to build, certifications to get,
+career trajectory at 3 months / 6 months / 1 year, and quick wins for
+this week.
 
-### ⚡ Vector Boost
+### Vector Boost
 Rewrites your resume for a specific role — headline options, summary
 rewrite, bullet point rewrites in STAR format, power word upgrades,
 JD language mirroring, and tone analysis. Before and after comparison
 for every change.
 
-### 🎤 Interview Launchpad
-Live AI interview with Alex, your AI interviewer. Questions are tailored
-to your actual resume experience and the specific JD. Natural
-back-and-forth conversation with follow-up questions if answers need
-more depth. Full feedback report at the end: score per answer, what was
-good, what was weak, and a stronger answer suggestion per question.
+### Interview Launchpad
+Live AI interview tailored to your actual resume experience and the specific
+job description. Natural back-and-forth conversation with follow-up questions.
+Full feedback report at the end: score per answer, what was good, what was
+weak, and a stronger answer suggestion per question.
 
 ---
 
@@ -74,7 +87,7 @@ Resume PDF / DOCX
         ↓
 PyMuPDF / python-docx  →  raw text
         ↓
-Groq API (Llama 3.3 70B)  →  structured resume JSON
+Groq API  →  structured resume JSON
         ↓
 JobFetchService builds queries from resume skills + titles
         ↓
@@ -97,14 +110,15 @@ Streamlit UI
 
 | Layer | Technology |
 |---|---|
-| LLM (heavy tasks) | Groq — Llama 3.3 70B Versatile |
-| LLM (interview chat) | Groq — Llama 3.1 8B Instant |
+| LLM (heavy tasks) | Groq — openai/gpt-oss-120b |
+| LLM (interview chat) | Groq — openai/gpt-oss-20b |
 | Embeddings | HuggingFace sentence-transformers / all-MiniLM-L6-v2 |
 | Vector Database | Pinecone Serverless |
 | Job Data | JSearch API via RapidAPI (real-time LinkedIn + Indeed) |
 | Resume Parsing | PyMuPDF (PDF) + python-docx (DOCX) |
 | Frontend | Streamlit |
 | Language | Python 3.11 |
+| Deployment | Docker on HuggingFace Spaces |
 
 ---
 
@@ -112,25 +126,24 @@ Streamlit UI
 
 ```
 careervector/
-├── app.py                              ← entry point
+├── app.py
 ├── src/
-│   ├── ai/                             ← Groq client, prompt manager, parser
-│   ├── core/                           ← config, settings
-│   ├── embeddings/                     ← HuggingFace embedding service
-│   ├── matching/                       ← Pinecone matcher + job ingestion
-│   ├── prompts/                        ← all LLM prompts
-│   ├── resume/                         ← PDF/DOCX parser, analyzer
-│   ├── services/groq/                  ← all AI services
+│   ├── ai/                             LLM client, prompt manager, parser
+│   ├── core/                           config, settings
+│   ├── embeddings/                     HuggingFace embedding service
+│   ├── matching/                       Pinecone matcher + job ingestion
+│   ├── prompts/                        all LLM prompts
+│   ├── resume/                         PDF/DOCX parser, analyzer
+│   ├── services/groq/
 │   │   ├── ats_service.py
 │   │   ├── career_service.py
 │   │   ├── interview_service.py
-│   │   ├── job_fetch_service.py        ← dynamic job fetching per resume
+│   │   ├── job_fetch_service.py
 │   │   ├── optimizer_service.py
 │   │   ├── resume_service.py
 │   │   └── skill_service.py
 │   └── ui/
 │       ├── components/
-│       │   ├── cards/                  ← resume section cards
 │       │   ├── _ATS_Score.py
 │       │   ├── _Interview_Prep.py
 │       │   ├── _Job_Matches.py
@@ -139,13 +152,14 @@ careervector/
 │       │   └── _Skill_Gap.py
 │       ├── sidebar.py
 │       └── theme.py
+├── evaluation/
+│   ├── eval_dataset.json               20 labeled resume-JD pairs
+│   ├── populate_index.py               pre-population script
+│   └── evaluate.py                     evaluation runner
 ├── assets/
-│   ├── css/styles.css
-│   └── images/logo_cv.svg
 ├── Dockerfile
-├── .streamlit/config.toml
 ├── requirements.txt
-└── .env                                ← never committed
+└── .env                                never committed
 ```
 
 ---
@@ -186,7 +200,7 @@ JSEARCH_API_KEY=your_rapidapi_key_here
 ```
 
 ### 5 — Create Pinecone index
-Go to pinecone.io and create an index with:
+Go to pinecone.io and create an index:
 - Name: `jd-matcher`
 - Dimensions: `384`
 - Metric: `cosine`
@@ -197,20 +211,19 @@ Go to pinecone.io and create an index with:
 streamlit run app.py
 ```
 
-Open `http://localhost:8501` — upload your resume and jobs are
-fetched automatically based on your skills.
+Open `http://localhost:8501`
 
 ---
 
 ## How It Works
 
 ```
-1. Vector Analysis      →  upload resume → jobs fetched automatically
-2. Career Matches       →  see real matched jobs tailored to your resume
-3. ATS Radar            →  score your resume against a specific job
-4. Growth Path          →  get your personalized skill roadmap
-5. Vector Boost         →  rewrite your resume for a specific role
-6. Interview Launchpad  →  practice a live interview with Alex
+1. Vector Analysis      upload resume, jobs fetched automatically
+2. Career Matches       real matched jobs tailored to your resume
+3. ATS Radar            score your resume against a specific job
+4. Growth Path          personalized skill roadmap
+5. Vector Boost         rewrite your resume for a specific role
+6. Interview Launchpad  live interview practice with feedback
 ```
 
 ---
@@ -227,21 +240,21 @@ fetched automatically based on your skills.
 
 ## What Makes It Different
 
-- **Resume-tailored job search** — jobs are fetched in real time based
-  on your specific skills and experience, not a hardcoded list
-- **Section-weighted matching** — skills and experience are weighted
-  more heavily than generic resume text for better match accuracy
-- **End-to-end pipeline** — upload once, get job matches, ATS score,
-  skill roadmap, resume rewrite, and interview prep all from one resume
-- **Live interview simulator** — natural conversation with follow-up
-  questions, scored per answer with better answer suggestions
+- Resume-tailored job search — jobs fetched in real time based on your
+  specific skills and experience, not a hardcoded query list
+- Section-weighted matching — skills and experience weighted more heavily
+  than generic resume text for better match accuracy
+- Evaluated — 72% Precision@5 on a manually labeled dataset of 20
+  resume-JD pairs with 99ms median query latency
+- End-to-end pipeline — upload once, get job matches, ATS score,
+  skill roadmap, resume rewrite, and interview prep from one resume
 
 ---
 
 ## Author
 
-**Jeevana Sai Gogineni**
-MS Data Science · University of Maryland, College Park ·
+Jeevana Sai Gogineni
+
 
 [LinkedIn](https://linkedin.com/in/jeevana-gogineni) ·
 [GitHub](https://github.com/gjeevana27)
